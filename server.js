@@ -26,15 +26,18 @@
 
 
 import { fastify } from 'fastify'
-import { DatabaseMemory } from './database.js'
-const server = fastify()
+//import { DatabaseMemory } from './database.js'
+import { DatabasePostgres } from './database-postgres.js'
 
-const Database = new DatabaseMemory()
+const server = fastify()
+const Database = new DatabasePostgres()
+
+//const Database = new DatabaseMemory()
   
-server.post('/videos', (request, reply) => {
+server.post('/videos', async (request, reply) => {
   const { title, description, duration } = request.body
 
-  Database.create({
+  await Database.create({
     title,
     description,
     duration
@@ -45,17 +48,17 @@ server.post('/videos', (request, reply) => {
 
 //obs: o navegador, por padrão, realiza apenas requisições GET, é preciso de uma extenção do VScode para outras requisições
 
-server.get('/videos', (request, reply) => {
+server.get('/videos', async (request, reply) => {
   const search = request.query.search
-  const videos = Database.list(search)
+  const videos = await Database.list(search)
   return videos
 })
 
-server.put('/videos/:id', (request, reply) => {
+server.put('/videos/:id', async(request, reply) => {
   const videoId = request.params.id
   const { title, description, duration } = request.body
 
-  Database.update(videoId, {
+  await Database.update(videoId, {
     title,
     description,
     duration
@@ -64,16 +67,16 @@ server.put('/videos/:id', (request, reply) => {
   return reply.status(204).send()
 })
 
-server.delete('/videos/:id', (request, reply) => {
+server.delete('/videos/:id', async(request, reply) => {
   const videoId = request.params.id
 
-  Database.delete(videoId)
+  await Database.delete(videoId)
 
   return reply.status(200).send()
 })
 
 server.listen(
   {
-    port: 3333,
+    port: process.env.PORT ?? 3333,
   }
 )
